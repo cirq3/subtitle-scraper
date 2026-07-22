@@ -106,7 +106,7 @@ async function getDownloadUrl(linkUrl) {
     await page.goto(linkUrl, { waitUntil: 'networkidle2', timeout: 30000 });
 
     // Wait for redirect or download link
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
 
     // Check current URL (might have redirected)
     const currentUrl = page.url();

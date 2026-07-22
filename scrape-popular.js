@@ -43,7 +43,7 @@ async function searchAndGetSubtitles(query) {
 
     // Go to movie page
     await page.goto(movieLink, { waitUntil: 'networkidle2', timeout: 30000 });
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
 
     // Extract subtitle link
     const subtitleLink = await page.evaluate(() => {
@@ -62,7 +62,7 @@ async function searchAndGetSubtitles(query) {
 
     // Get download URL
     await page.goto(subtitleLink, { waitUntil: 'networkidle2', timeout: 30000 });
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
 
     const downloadUrl = await page.evaluate(() => {
       const links = document.querySelectorAll('a');
