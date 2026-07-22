@@ -43,22 +43,58 @@ async function searchAndGetSubtitles(query) {
 
     // Go to movie page
     await page.goto(movieLink, { waitUntil: 'networkidle2', timeout: 30000 });
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 5000)); // Wait for AJAX to load download links
 
-    // Extract subtitle link
-    const subtitleLink = await page.evaluate(() => {
-      let found = null;
-      document.querySelectorAll('tr, div').forEach(el => {
-        const text = el.textContent?.toLowerCase() || '';
-        if (text.includes('subtitle')) {
-          const link = el.querySelector('a[href*="/links/"]');
-          if (link) found = link.href;
-        }
+    // Extract ALL links with /links/ pattern
+    const allLinks = await page.evaluate(() => {
+      const links = [];
+      document.querySelectorAll('a[href*="/links/"]').forEach(a => {
+        links.push({ href: a.href, text: a.textContent?.trim() || '', parentText: a.parentElement?.textContent?.trim() || '' });
       });
-      return found;
+      return links;
     });
 
-    if (!subtitleLink) return null;
+    console.log(`  Found ${allLinks.length} link elements`);
+
+    // Find the subtitle link - look for any link where nearby text mentions "subtitle"
+    let subtitleLink = null;
+    for (const link of allLinks) {
+      const combined = (link.text + ' ' + link.parentText).toLowerCase();
+      if (combined.includes('subtitle')) {
+        subtitleLink = link.href;
+        break;
+      }
+    }
+
+    // If no explicit subtitle link, try to find it in table rows
+    if (!subtitleLink) {
+      subtitleLink = await page.evaluate(() => {
+        // Look through all table rows for "subtitle" text
+        const rows = document.querySelectorAll('tr');
+        for (const row of rows) {
+          const text = row.textContent?.toLowerCase() || '';
+          if (text.includes('subtitle')) {
+            const link = row.querySelector('a[href*="/links/"]');
+            if (link) return link.href;
+          }
+        }
+        // Also check divs
+        const divs = document.querySelectorAll('div');
+        for (const div of divs) {
+          const text = div.textContent?.toLowerCase() || '';
+          if (text.includes('subtitle') && text.length < 200) {
+            const link = div.querySelector('a[href*="/links/"]');
+            if (link) return link.href;
+          }
+        }
+        return null;
+      });
+    }
+
+    if (!subtitleLink) {
+      console.log(`  No subtitle link found in ${allLinks.length} links`);
+      return null;
+    }
 
     // Get download URL
     await page.goto(subtitleLink, { waitUntil: 'networkidle2', timeout: 30000 });
