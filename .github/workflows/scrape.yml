@@ -44,5 +44,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: subtitle-results
-          path: subtitles.json
+          path: public/subtitles.json
           retention-days: 7
