@@ -2,8 +2,8 @@ name: Scrape Sinhala Subtitles
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
-  workflow_dispatch:        # Manual trigger
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
     inputs:
       movie_title:
         description: 'Movie title to search'
@@ -40,9 +40,10 @@ jobs:
             node scrape-popular.js
           fi
       
-      - name: Upload results
-        uses: actions/upload-artifact@v4
-        with:
-          name: subtitle-results
-          path: public/subtitles.json
-          retention-days: 7
+      - name: Commit results
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add public/subtitles.json
+          git diff --staged --quiet || git commit -m "Update subtitles data [skip ci]"
+          git push
