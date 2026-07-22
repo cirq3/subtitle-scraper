@@ -104,9 +104,16 @@ async function searchAndGetSubtitles(query) {
     await new Promise(r => setTimeout(r, 3000));
 
     const downloadUrl = await page.evaluate(() => {
-      const links = document.querySelectorAll('a');
+      const links = document.querySelectorAll('a[href]');
       for (const link of links) {
-        if (link.href && (link.href.includes('ddl') || link.href.includes('.srt') || link.href.includes('download'))) {
+        const href = link.href || '';
+        if (href.includes('.zip') || href.includes('.srt') || href.includes('/uploads/')) {
+          return href;
+        }
+      }
+      // Fallback: look for ddl or download patterns
+      for (const link of document.querySelectorAll('a')) {
+        if (link.href && (link.href.includes('ddl') || link.href.includes('download'))) {
           return link.href;
         }
       }
