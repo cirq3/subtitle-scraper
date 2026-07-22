@@ -59,34 +59,32 @@ async function searchAndGetSubtitles(query) {
       console.log(`    Link: ${l.href} | Text: ${l.text} | Parent: ${l.parentText.substring(0, 80)}`);
     }
 
-    // Find the subtitle link - look for any link where nearby text mentions "subtitle"
+    // Find the subtitle link - look for table row with "Sinhala Subtitle" quality
     let subtitleLink = null;
-    for (const link of allLinks) {
-      const combined = (link.text + ' ' + link.parentText).toLowerCase();
-      if (combined.includes('subtitle')) {
-        subtitleLink = link.href;
-        break;
-      }
-    }
 
-    // If no explicit subtitle link, try to find it in table rows
+    // Method 1: Look in the links-table for "Sinhala Subtitle" row
+    subtitleLink = await page.evaluate(() => {
+      // Find all table rows in the download table
+      const rows = document.querySelectorAll('tr[id*="link-row"]');
+      for (const row of rows) {
+        const qualityCell = row.querySelector('.quality, td:nth-child(2)');
+        const text = qualityCell?.textContent?.toLowerCase() || '';
+        if (text.includes('subtitle') || text.includes('sinhala')) {
+          const link = row.querySelector('a[href*="/links/"]');
+          if (link) return link.href;
+        }
+      }
+      return null;
+    });
+
+    // Method 2: Broader search
     if (!subtitleLink) {
       subtitleLink = await page.evaluate(() => {
-        // Look through all table rows for "subtitle" text
         const rows = document.querySelectorAll('tr');
         for (const row of rows) {
           const text = row.textContent?.toLowerCase() || '';
-          if (text.includes('subtitle')) {
+          if (text.includes('subtitle') && text.length < 300) {
             const link = row.querySelector('a[href*="/links/"]');
-            if (link) return link.href;
-          }
-        }
-        // Also check divs
-        const divs = document.querySelectorAll('div');
-        for (const div of divs) {
-          const text = div.textContent?.toLowerCase() || '';
-          if (text.includes('subtitle') && text.length < 200) {
-            const link = div.querySelector('a[href*="/links/"]');
             if (link) return link.href;
           }
         }
@@ -95,9 +93,11 @@ async function searchAndGetSubtitles(query) {
     }
 
     if (!subtitleLink) {
-      console.log(`  No subtitle link found in ${allLinks.length} links`);
+      console.log(`  No subtitle link found`);
       return null;
     }
+
+    console.log(`  Subtitle link: ${subtitleLink}`);
 
     // Get download URL
     await page.goto(subtitleLink, { waitUntil: 'networkidle2', timeout: 30000 });
