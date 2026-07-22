@@ -55,6 +55,9 @@ async function searchAndGetSubtitles(query) {
     });
 
     console.log(`  Found ${allLinks.length} link elements`);
+    for (const l of allLinks) {
+      console.log(`    Link: ${l.href} | Text: ${l.text} | Parent: ${l.parentText.substring(0, 80)}`);
+    }
 
     // Find the subtitle link - look for any link where nearby text mentions "subtitle"
     let subtitleLink = null;
