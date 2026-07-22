@@ -1,0 +1,20 @@
+name: Test Scraper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - name: Install Chromium
+        run: sudo apt-get update && sudo apt-get install -y chromium-browser
+      - name: Run test
+        env:
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
+        run: node test.js
