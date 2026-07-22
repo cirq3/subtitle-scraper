@@ -1,0 +1,13 @@
+{
+  "name": "lksubs-scraper",
+  "version": "1.0.0",
+  "description": "Sinhala subtitle scraper for lksubs.com",
+  "main": "scraper.js",
+  "scripts": {
+    "scrape": "node scraper.js",
+    "scrape:popular": "node scrape-popular.js"
+  },
+  "dependencies": {
+    "puppeteer": "^22.0.0"
+  }
+}
